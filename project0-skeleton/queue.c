@@ -37,7 +37,7 @@ static queue_link* queue_new_element(queue_element* elem) {
 
 void queue_append(queue* q, queue_element* elem) {
   assert(q != NULL);
-  
+
   // Bug #1
   // Corner case: Head element has not been initialized
   // i.e. queue size is 0
@@ -66,7 +66,7 @@ bool queue_remove(queue* q, queue_element** elem_ptr) {
   *elem_ptr = q->head->elem;
   old_head = q->head;
   q->head = q->head->next;
-  
+
   // Bug #2
   // Memory leak unless the link is freed
   free(old_head);
@@ -107,23 +107,23 @@ bool queue_apply(queue* q, queue_function qf, queue_function_args* args) {
 
 void queue_reverse(queue* q) {
   assert(q != NULL);
-  
+
   // Nothing to reverse
-  // A queue size of 1 also has nothing to reverse, 
+  // A queue size of 1 also has nothing to reverse,
   //   but since queue_size does a traversal of the queue
   //   it would be faster to just perform the "reversal"
   if (queue_is_empty(q)) {
     return;
   }
-  
+
   queue_link* cur = q->head;
   q->head = NULL;
   queue_link* next_elem;
-  
+
   // Treat new_head as a stack and push the queue onto it
   for (; cur != NULL; cur = next_elem) {
     next_elem = cur->next;
-    
+
     cur->next = q->head;
     q->head = cur;
   }
@@ -131,26 +131,26 @@ void queue_reverse(queue* q) {
 
 void queue_sort(queue* q, queue_compare qc) {
   assert(q != NULL && qc != NULL);
-  
+
   if (queue_is_empty(q)) {
     return;
   }
-  
+
   // Via insertion sort
-  
+
   // Disconnect the head from the rest of the queue
   queue_link* cur = q->head->next;
   q->head->next = NULL;
-  
-  // Insert each element from the detached queue 
+
+  // Insert each element from the detached queue
   // back into the queue, in order
-  while(cur != NULL) {
+  while (cur != NULL) {
     // Detach the head of the detached queue
     // to be inserted into the main queue
     queue_link* insert = cur;
     cur = cur->next;
     insert->next = NULL;
-    
+
     queue_link* prev = NULL;
     for (queue_link* sorted = q->head; sorted != NULL; sorted = sorted->next) {
       // Insert ahead of the the element
