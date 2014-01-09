@@ -116,17 +116,62 @@ void queue_reverse(queue* q) {
     return;
   }
   
-  queue_link* new_head = NULL;
-  queue_link* cur;
+  queue_link* cur = q->head;
+  q->head = NULL;
   queue_link* next_elem;
   
   // Treat new_head as a stack and push the queue onto it
-  for (cur = q->head; cur != NULL; cur = next_elem) {
+  for (; cur != NULL; cur = next_elem) {
     next_elem = cur->next;
     
-    cur->next = new_head;
-    new_head = cur;
+    cur->next = q->head;
+    q->head = cur;
+  }
+}
+
+void queue_sort(queue* q, queue_compare qc) {
+  assert(q != NULL && qc != NULL);
+  
+  if (queue_is_empty(q)) {
+    return;
   }
   
-  q->head = new_head;
+  // Via insertion sort
+  
+  // Disconnect the head from the rest of the queue
+  queue_link* cur = q->head->next;
+  q->head->next = NULL;
+  
+  // Insert each element from the detached queue 
+  // back into the queue, in order
+  while(cur != NULL) {
+    // Detach the head of the detached queue
+    // to be inserted into the main queue
+    queue_link* insert = cur;
+    cur = cur->next;
+    insert->next = NULL;
+    
+    queue_link* prev = NULL;
+    for (queue_link* sorted = q->head; sorted != NULL; sorted = sorted->next) {
+      // Insert ahead of the the element
+      if (qc(insert->elem, sorted->elem) <= 0) {
+        // Is the value smaller than all values in the queue?
+        if (prev == NULL) {
+          insert->next = q->head;
+          q->head = insert;
+        } else {
+          prev->next = insert;
+          insert->next = sorted;
+        }
+        break;
+      } else {
+        // The value to be inserted is greater than all values in the queue
+        if (sorted->next == NULL) {
+          sorted->next = insert;
+          break;
+        }
+      }
+      prev = sorted;
+    }
+  }
 }

@@ -117,7 +117,7 @@ void test_queue_append_remove() {
 }
 
 // Checks the values of the queue, assuming they count up from *args
-// Helper for test_reverse_queue()
+// Helper for test_reverse_queue() and test_sort_queue()
 bool check_queue_elements_in_order(queue_element* elem, queue_function_args* args) {
   print_queue_item(elem, args);
   assert(*(int*) elem == *(int*) args);
@@ -173,7 +173,68 @@ void test_reverse_queue() {
   queue_apply(q, check_queue_elements_in_order, &index);
 }
 
-/** Test helpers **/
+// Helper for test_sort_queue()
+int int_compare(queue_element* e1, queue_element* e2) {
+  return *(int*)e1 - *(int*)e2;
+}
+
+void test_sort_queue() {
+  // This test appends and sorts elements in the queue
+  queue* q = queue_create();
+  
+  int a = 0;
+  int b = 1; 
+  int c = 2; 
+  int index = 0;
+  
+  // No-op
+  queue_sort(q, int_compare);
+  
+  // No-op again
+  queue_append(q, &a);
+  queue_sort(q, int_compare);
+  
+  // Shouldn't mess up the order
+  // This exercises appending numbers to the end of the sorted queue
+  queue_append(q, &b);
+  queue_sort(q, int_compare);
+  queue_apply(q, check_queue_elements_in_order, &index);
+  
+  // Same here
+  queue_append(q, &c);
+  queue_sort(q, int_compare);
+  index = 0;
+  queue_apply(q, check_queue_elements_in_order, &index);
+  
+  // Change the order
+  // This exercises appending numbers to the beginning
+  c = 0;
+  b = 1;
+  a = 2;
+  queue_sort(q, int_compare);
+  index = 0;
+  queue_apply(q, check_queue_elements_in_order, &index);
+  
+  // Change the order again
+  // This exercises appending numbers in the middle of the sorted queue
+  c = 0;
+  a = 1; 
+  b = 2;
+  queue_sort(q, int_compare);
+  index = 0;
+  queue_apply(q, check_queue_elements_in_order, &index);
+  
+  // Just to make sure, pop the elements off
+  int* removed;
+  queue_remove(q, (queue_element **) &removed);
+  assert(&c == removed);
+  queue_remove(q, (queue_element **) &removed);
+  assert(&a == removed);
+  queue_remove(q, (queue_element **) &removed);
+  assert(&b == removed);
+}
+
+/** Test running helpers **/
 
 // Signature for a test function
 typedef void (*test_function)(void);
@@ -191,6 +252,7 @@ int main(int argc, char* argv[]) {
   run_test(test_queue_append, "queue pushing (the original test)");
   run_test(test_queue_append_remove, "queue CRU[D]");
   run_test(test_reverse_queue, "queue reversal");
+  run_test(test_sort_queue, "queue sorting");
   
   printf("All tests passed (Yay!)\n");
   return 0;
