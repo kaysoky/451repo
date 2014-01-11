@@ -20,6 +20,7 @@ struct _queue {
 
 queue* queue_create() {
   queue* q = (queue*) malloc(sizeof(queue));
+  assert(q != NULL);
 
   q->head = NULL;
   return q;
@@ -28,6 +29,7 @@ queue* queue_create() {
 /* Private */
 static queue_link* queue_new_element(queue_element* elem) {
   queue_link* ql = (queue_link*) malloc(sizeof(queue_link));
+  assert(ql != NULL);
 
   ql->elem = elem;
   ql->next = NULL;
@@ -174,4 +176,13 @@ void queue_sort(queue* q, queue_compare qc) {
       prev = sorted;
     }
   }
+}
+
+void queue_destroy(queue* q) {
+  queue_link* next;
+  for (queue_link* cur = q->head; cur != NULL; cur = next) {
+    next = cur->next;
+    free(cur);
+  }
+  free(q);
 }

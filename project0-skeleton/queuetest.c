@@ -18,7 +18,8 @@ void test_queue_create() {
 
   // Should start out empty
   assert(queue_is_empty(q));
-  free(q);
+  
+  queue_destroy(q);
 }
 
 // Checks the values of the queue
@@ -66,7 +67,7 @@ void test_queue_append() {
   int index = 0;
   queue_apply(q, check_queue_append_elements, &index);
 
-  free(q);
+  queue_destroy(q);
 }
 
 // This test appends and removes elements from the queue
@@ -114,7 +115,7 @@ void test_queue_append_remove() {
   assert(queue_size(q) == 1);
   assert(!queue_is_empty(q));
 
-  free(q);
+  queue_destroy(q);
 }
 
 // Checks the values of the queue, assuming they count up from *args
@@ -174,6 +175,8 @@ void test_reverse_queue() {
   queue_reverse(q);
   index = 0;
   queue_apply(q, check_queue_elements_in_order, &index);
+  
+  queue_destroy(q);
 }
 
 // Helper for test_sort_queue()

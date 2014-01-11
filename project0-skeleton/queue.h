@@ -96,5 +96,8 @@ typedef int (*queue_compare)(queue_element* /* e1* */, queue_element* /* e2* */)
 // Sorts the elements of the given queue in place.
 void queue_sort(queue* q, queue_compare qc);
 
+// Frees up the memory used by the queue
+void queue_destroy(queue* q);
+
 #endif  // _QUEUE_H_
 
