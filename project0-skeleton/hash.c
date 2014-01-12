@@ -26,18 +26,23 @@ typedef struct _hash_entry {
 
 struct _hash_table {
   hash_hasher hasher;
-  hash_compare predicate;
+  hash_compare comparer;
   hash_entry* entries;
   int capacity;
   int size;
 };
 
-hash_table* hash_create(hash_hasher hasher, hash_compare predicate) {
+hash_table* hash_create(hash_hasher hasher, hash_compare comparer) {
+  assert(hasher != NULL);
+  assert(comparer != NULL);
+
+  // Allocate the table
   hash_table* ht = (hash_table*) malloc(sizeof(hash_table));
   assert(ht != NULL);
 
+  // Save and initialize
   ht->hasher = hasher;
-  ht->predicate = predicate;
+  ht->comparer = comparer;
   ht->entries = (hash_entry*) 
       calloc(INITIAL_HASH_TABLE_SIZE, sizeof(hash_entry));
   ht->capacity = INITIAL_HASH_TABLE_SIZE;
@@ -50,10 +55,36 @@ hash_table* hash_create(hash_hasher hasher, hash_compare predicate) {
 /* Private */
 // Inserts the key-value into the hash table
 // Similar to hash_insert(...) but does not enlarge the table
-static void hash_insert_private(hash_table* ht, hash_entry* he
+static void hash_insert_private(hash_table* ht, hash_entry he
                                 void** removed_key_ptr, 
                                 void** removed_value_ptr) {
-  //TODO
+  // Iterate over the table and find where to insert the key-value
+  int startIndex = ht->hasher(he.key) % ht->capacity;
+  int iter = startIndex;
+  do {
+    // Insert if:
+    //    1) There is no entry in this slot
+    // OR 2) The entry in this slot has been deleted
+    // OR 3) The key in this slot matches
+    if (ht->entries[iter] == NULL 
+        || ht->entries[iter].value == NULL 
+        || ht->comparer(he.key, ht->entries[iter].key) == 0) {
+      // Return the (possibly NULL) overwritten key-value
+      *removed_key_ptr = ht->entries[iter].key;
+      *removed_value_ptr = ht->entries[iter].value;
+
+      // Perform the insert
+      ht->entries[iter] = he;
+      break;
+    }
+
+    // Have the iterator loop around if necessary
+    iter = (iter + 1) % ht->capacity;
+
+    // If the iteration goes through all the slots, 
+    // then something is fatally wrong with the table
+    assert(iter != startIndex);
+  } while (iter != startIndex);
 }
 
 /* Private */
@@ -92,6 +123,11 @@ static void hash_enlarge_table(hash_table* ht) {
 
 void hash_insert(hash_table* ht, void* key, void* value,
                  void** removed_key_ptr, void** removed_value_ptr) {
+  assert(ht != NULL);
+  assert(key != NULL);
+  assert(removed_key_ptr != NULL);
+  assert(removed_value_ptr != NULL);
+
   // Check to see if insertion would have the load 
   // of the table surpass a pre-defined threshold.
   if ((ht->size + 1) * INVERSE_LOAD_FACTOR >= ht->capacity) {
@@ -100,13 +136,40 @@ void hash_insert(hash_table* ht, void* key, void* value,
   }
 
   // Combine the key-value
-  hash_entry* he = (hash_entry*) malloc(sizeof(hash_entry));
-  assert(he != NULL);
+  hash_entry he;
   he->key = key;
   he->value = value;
 
   // Do the insert
   hash_insert_private(ht, he, removed_key_ptr, removed_value_ptr);
+}
+
+bool hash_lookup(hash_table* ht, const void* key, void** value_ptr) {
+  assert(ht != NULL);
+  assert(key != NULL);
+  assert(value_ptr != NULL);
+
+  int startIndex = ht->hasher(key) % ht->capacity;
+  int iter = startIndex;
+  do {
+    // Match the keys
+    if (ht->comparer(key, ht->entries[iter].key) == 0) {
+      // Check if the key has been deleted
+      if (ht->entries[iter].value == NULL) {
+        return false;
+      }
+
+      // Return the value
+      *value_ptr = ht->entries[iter].value;
+      return true;
+    }
+
+    // Have the iterator loop around if necessary
+    iter = (iter + 1) % ht->capacity;
+  } while (iter != startIndex);
+
+  // Didn't find a matching key
+  return false;
 }
 
 //TODO
