@@ -49,13 +49,13 @@ hash_table* hash_create(hash_hasher hasher, hash_compare comparer) {
   ht->size = 0;
 
   assert(ht->entries != NULL);
-  return htable;
+  return ht;
 }
 
 /* Private */
 // Inserts the key-value into the hash table
 // Similar to hash_insert(...) but does not enlarge the table
-static void hash_insert_private(hash_table* ht, hash_entry he
+static void hash_insert_private(hash_table* ht, hash_entry he, 
                                 void** removed_key_ptr, 
                                 void** removed_value_ptr) {
   // Iterate over the table and find where to insert the key-value
@@ -66,15 +66,30 @@ static void hash_insert_private(hash_table* ht, hash_entry he
     //    1) There is no entry in this slot
     // OR 2) The entry in this slot has been deleted
     // OR 3) The key in this slot matches
-    if (ht->entries[iter] == NULL 
+    if (ht->entries[iter].key == NULL 
         || ht->entries[iter].value == NULL 
         || ht->comparer(he.key, ht->entries[iter].key) == 0) {
+      // Increment the size
+      // Case 1: A manual delete
+      if (he.value == NULL) {
+        ht->size--;
+      }
+
+      // Case 2: An overwrite
+      // No change
+
+      // Case 3: A normal insert
+      if (he.value != NULL && ht->entries[iter].value == NULL) {
+        ht->size++;
+      }
+
       // Return the (possibly NULL) overwritten key-value
       *removed_key_ptr = ht->entries[iter].key;
       *removed_value_ptr = ht->entries[iter].value;
 
       // Perform the insert
       ht->entries[iter] = he;
+
       break;
     }
 
@@ -105,7 +120,7 @@ static void hash_enlarge_table(hash_table* ht) {
   void* staysNull = NULL;
   void* staysNullToo = NULL;
   for (int i = 0; i < oldCapacity; i++) {
-    if (old[i]->key != NULL && old[i]->value != NULL) {
+    if (old[i].key != NULL && old[i].value != NULL) {
       hash_insert_private(ht, old[i], &staysNull, &staysNullToo);
 
       // No keys should be replaced by the table enlargement
@@ -137,31 +152,27 @@ void hash_insert(hash_table* ht, void* key, void* value,
 
   // Combine the key-value
   hash_entry he;
-  he->key = key;
-  he->value = value;
+  he.key = key;
+  he.value = value;
 
   // Do the insert
   hash_insert_private(ht, he, removed_key_ptr, removed_value_ptr);
 }
 
-bool hash_lookup(hash_table* ht, const void* key, void** value_ptr) {
+/* Private */
+// Returns the index of the key within the table
+// Or -1 if not found
+static int hash_lookup_index(hash_table* ht, const void* key) {
   assert(ht != NULL);
   assert(key != NULL);
-  assert(value_ptr != NULL);
 
   int startIndex = ht->hasher(key) % ht->capacity;
   int iter = startIndex;
   do {
-    // Match the keys
-    if (ht->comparer(key, ht->entries[iter].key) == 0) {
-      // Check if the key has been deleted
-      if (ht->entries[iter].value == NULL) {
-        return false;
-      }
-
-      // Return the value
-      *value_ptr = ht->entries[iter].value;
-      return true;
+    // Match the keys, ignoring deleted values
+    if (ht->entries[iter].value != NULL 
+        && ht->comparer(key, ht->entries[iter].key) == 0) {
+      return iter;
     }
 
     // Have the iterator loop around if necessary
@@ -169,7 +180,67 @@ bool hash_lookup(hash_table* ht, const void* key, void** value_ptr) {
   } while (iter != startIndex);
 
   // Didn't find a matching key
+  return -1;
+}
+
+bool hash_lookup(hash_table* ht, const void* key, void** value_ptr) {
+  assert(value_ptr != NULL);
+
+  int index = hash_lookup_index(ht, key);
+
+  if (index >= 0) {
+    // Found a matching key
+    *value_ptr = ht->entries[index].value;
+    return true;
+  }
+
+  // Didn't find a matching key
   return false;
 }
 
-//TODO
+bool hash_is_present(hash_table* ht, const void* key) {
+  return hash_lookup_index(ht, key) >= 0;
+}
+
+bool hash_remove(hash_table* ht, const void* key,
+                 void** removed_key_ptr, void** removed_value_ptr) {
+  assert(removed_key_ptr != NULL);
+  assert(removed_value_ptr != NULL);
+
+  int index = hash_lookup_index(ht, key);
+
+  if (index >= 0) {
+    // Found a matching key
+    *removed_key_ptr = ht->entries[index].key;
+    *removed_value_ptr = ht->entries[index].value;
+    ht->entries[index].value = NULL;
+    return true;
+  }
+
+  // Didn't find a matching key
+  return false;
+}
+
+void hash_destroy(hash_table* ht, bool free_keys, bool free_values) {
+  if (free_values) {
+    // Free each non-NULL value
+    for (int i = 0; i < ht->capacity; i++) {
+      if (ht->entries[i].value != NULL) {
+        free(ht->entries[i].value);
+      }
+    }
+  }
+
+  if (free_keys) {
+    // Free each non-NULL key with a non-NULL value
+    for (int i = 0; i < ht->capacity; i++) {
+      if (ht->entries[i].key != NULL && ht->entries[i].value != NULL) {
+        free(ht->entries[i].key);
+      }
+    }
+  }
+
+  // Clean up the rest of the table
+  free(ht->entries);
+  free(ht);
+}
