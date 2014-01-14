@@ -238,6 +238,8 @@ void test_sort_queue() {
   assert(&a == removed);
   queue_remove(q, (queue_element **) &removed);
   assert(&b == removed);
+
+  free(q);
 }
 
 /** Test running helpers **/
