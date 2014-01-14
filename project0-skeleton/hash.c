@@ -12,7 +12,7 @@
 
 // The number of elements within the hash table multiplied by this value
 // must be less than the capacity of the hash table.
-// If not, then the table is enlarged and rehashed upon insert.  
+// If not, then the table is enlarged and rehashed upon insert.
 #define INVERSE_LOAD_FACTOR 2
 
 // Determines how much the hash table's capacity expands upon enlargement.
@@ -43,7 +43,7 @@ hash_table* hash_create(hash_hasher hasher, hash_compare comparer) {
   // Save and initialize
   ht->hasher = hasher;
   ht->comparer = comparer;
-  ht->entries = (hash_entry*) 
+  ht->entries = (hash_entry*)
       calloc(INITIAL_HASH_TABLE_SIZE, sizeof(hash_entry));
   ht->capacity = INITIAL_HASH_TABLE_SIZE;
   ht->size = 0;
@@ -55,8 +55,8 @@ hash_table* hash_create(hash_hasher hasher, hash_compare comparer) {
 /* Private */
 // Inserts the key-value into the hash table
 // Similar to hash_insert(...) but does not enlarge the table
-static void hash_insert_private(hash_table* ht, hash_entry he, 
-                                void** removed_key_ptr, 
+static void hash_insert_private(hash_table* ht, hash_entry he,
+                                void** removed_key_ptr,
                                 void** removed_value_ptr) {
   // Iterate over the table and find where to insert the key-value
   int startIndex = ht->hasher(he.key) % ht->capacity;
@@ -66,8 +66,8 @@ static void hash_insert_private(hash_table* ht, hash_entry he,
     //    1) There is no entry in this slot
     // OR 2) The entry in this slot has been deleted
     // OR 3) The key in this slot matches
-    if (ht->entries[iter].key == NULL 
-        || ht->entries[iter].value == NULL 
+    if (ht->entries[iter].key == NULL
+        || ht->entries[iter].value == NULL
         || ht->comparer(he.key, ht->entries[iter].key) == 0) {
       // Increment the size
       // Case 1: A manual delete
@@ -96,7 +96,7 @@ static void hash_insert_private(hash_table* ht, hash_entry he,
     // Have the iterator loop around if necessary
     iter = (iter + 1) % ht->capacity;
 
-    // If the iteration goes through all the slots, 
+    // If the iteration goes through all the slots,
     // then something is fatally wrong with the table
     assert(iter != startIndex);
   } while (iter != startIndex);
@@ -112,7 +112,7 @@ static void hash_enlarge_table(hash_table* ht) {
   // Update the state of the hash table
   ht->capacity = HASH_TABLE_GROWTH_FACTOR * ht->capacity;
   ht->size = 0;
-  ht->entries = (hash_entry*) 
+  ht->entries = (hash_entry*)
       calloc(ht->capacity, sizeof(hash_entry));
   assert(ht->entries != NULL);
 
@@ -143,7 +143,7 @@ void hash_insert(hash_table* ht, void* key, void* value,
   assert(removed_key_ptr != NULL);
   assert(removed_value_ptr != NULL);
 
-  // Check to see if insertion would have the load 
+  // Check to see if insertion would have the load
   // of the table surpass a pre-defined threshold.
   if ((ht->size + 1) * INVERSE_LOAD_FACTOR >= ht->capacity) {
     // If it does, expand the table
@@ -170,7 +170,7 @@ static int hash_lookup_index(hash_table* ht, const void* key) {
   int iter = startIndex;
   do {
     // Match the keys, ignoring deleted values
-    if (ht->entries[iter].value != NULL 
+    if (ht->entries[iter].value != NULL
         && ht->comparer(key, ht->entries[iter].key) == 0) {
       return iter;
     }
