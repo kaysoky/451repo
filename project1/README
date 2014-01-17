@@ -1,0 +1,21 @@
+Group member - Username
+    Joseph Wu - kaysoky
+    Tianchi Liu - ???
+
+Write-up
+a)  What is your syscall design? 
+        - 
+    What arguments does it take? 
+        - 
+    How does it return results? 
+        - 
+    What restrictions are there, if any, on its use?
+        - 
+
+b)  Explain the calling sequence that makes your system call work. 
+        - 
+
+c)  Why must some of the internal commands your shell supports be internal commands? 
+        - 
+    In the specific case of '.', explain how you chose to implement it and why, including the trade-offs this entails.
+        - 
