@@ -11,11 +11,15 @@ const char* SHELL_PROMPT = "CSE451Shell% ";
 // Used to split input strings into tokens
 const char* STRING_TOKEN_DELIMITERS = " \t";
 
+// Used to recognize the built-in command to exit the shell
+const char* BUILT_IN_COMMAND_EXIT = "exit";
+
 // Used to recognize the built-in command to change the working directory
 const char* BUILT_IN_COMMAND_CD = "cd";
 
-// Used to recognize the built-in command to exit the shell
-const char* BUILT_IN_COMMAND_EXIT = "exit";
+// The name of the environmental variable that is looked up
+// When the "cd" command is used without arguments
+const char* DEFAULT_CD_ENVIRO_VAR = "HOME";
 
 // This is either the default exit code (0) 
 // or the exit code of the last executed program
@@ -69,26 +73,40 @@ static int tokenize(char *line, char ***returned_tokens) {
     return num_tokens;
 }
 
-// Checks the token list for 
+// Calls the chdir() syscall
+// Using either the second token or the user's HOME variable
+// If neither are found, nothing happens
 static void change_directory(const int num_tokens, const char **tokens) {
-    if (num_tokens == 0 ||
-            strcmp(tokens[0], BUILT_IN_COMMAND_CD) != 0) {
-        return;
-    }
-    
     char *directory;
     
     // Is there an additional argument?
     if (num_tokens > 1) {
-        directory = toknes[1];
+        directory = tokens[1];
     } else {
         // Grab the directory from the user's HOME variable
-        //TODO
+        directory = getenv(DEFAULT_CD_ENVIRO_VAR);
+    }
+    
+    // Nothing to do here
+    // This happens if no argument is supplied
+    // and the environmental variable is not defined
+    if (directory == NULL) {
+        return;
     }
     
     // Make a system call to change the working directory
+    int res = chdir(directory);
+    
+    // Let the user know if the system call fails
+    if (res != 0) {
+        perror();
+    }
+}
+
+// Treats the first token as a path to an executable
+// And executes it, using the subsequent tokens as arguments
+static void execute_program(const int num_tokens, const char **tokens) {
     //TODO
-    chdir()
 }
 
 int main() {
@@ -145,7 +163,18 @@ int main() {
             exit(exit_code);
         }
         
-        change_directory(num_tokens, tokens);
+        // Check for the "cd" command
+        if (strcmp(tokens[0], BUILT_IN_COMMAND_CD) == 0) {
+            change_directory(num_tokens, tokens);
+            
+            // Clean up before looping
+            free(tokens);
+            free(line);
+            continue;
+        }
+        
+        // Treat the first argument as a path to an executable
+        execute_program(num_tokens, tokens);
         
         // Clean up before looping
         free(tokens);
