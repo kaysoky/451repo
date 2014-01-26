@@ -1235,14 +1235,6 @@ enum perf_event_task_context {
 	perf_nr_task_contexts,
 };
 
-/*
- * Contains the number of times a process and all its descendants
- * have called fork, vfork, execve, and clone
- */
-struct exec_count_struct {
-    unsigned int fork, vfork, execve, clone;
-};
-
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;
@@ -1616,7 +1608,7 @@ struct task_struct {
     
     // Incremented when fork, vfork, execve, and clone are called
     // Read by the the execcnts system call
-    struct exec_count_struct execcnts;
+    int execcnts[4];
 };
 
 /* Future-safe accessor for struct task_struct's cpus_allowed. */

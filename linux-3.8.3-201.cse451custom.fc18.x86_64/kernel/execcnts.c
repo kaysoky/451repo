@@ -4,7 +4,7 @@
 #include <linux/types.h>
 #include <linux/syscalls.h>
 
-SYSCALL_DEFINE2(execcnts, pid_t, pid, struct exec_count_struct *, execcnts) {
+SYSCALL_DEFINE2(execcnts, pid_t, pid, int __user *, execcnts) {
   // Grab a read lock on the process list
   // Since this call does not modify the list, we don't need a write lock
   read_lock(&tasklist_lock);
@@ -17,7 +17,10 @@ SYSCALL_DEFINE2(execcnts, pid_t, pid, struct exec_count_struct *, execcnts) {
     return -1;
   }
   
-  *execcnts = p->execcnts;
+  // Copy the counts into user space
+  if (copy_to_user(execcnts, &p->execcnts, 4 * sizeof(int))) {
+    return -EFAULT;
+  }
   
   return 0;
 }

@@ -1,12 +1,12 @@
 #include <unistd.h>
 #include <linux/sched.h>
 
-#DEFINE EXECCNTS_64 314
-#DEFINE EXECCNTS_32 351
+#define EXECCNTS_64 314
+#define EXECCNTS_32 351
 
 int main(int argc, char *argv[]) {
-    struct exec_count_struct ret;
+    int ret[4];
     syscall(EXECCNTS_64, &ret);
     
-    printf("%u %u %u %u\n", ret.fork, ret.vfork, ret.execve, ret.clone);
+    printf("%u %u %u %u\n", ret[0], ret[1], ret[2], ret[3]);
 }
