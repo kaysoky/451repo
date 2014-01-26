@@ -2,11 +2,7 @@
 #include <linux/sched.h>
 #include <linux/types.h>
 #include <linux/syscalls.h>
-
-#define EXECCNTS_FORK_INDEX 0
-#define EXECCNTS_VFORK_INDEX 1
-#define EXECCNTS_EXECVE_INDEX 2
-#define EXECCNTS_CLONE_INDEX 3
+#include <linux/execcnts.h>
 
 // Recurses up a process tree 
 // and increments the appropriate execcnts of each process by one
