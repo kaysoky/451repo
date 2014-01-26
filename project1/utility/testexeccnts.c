@@ -6,7 +6,9 @@
 
 int main(int argc, char *argv[]) {
     int ret[4];
-    syscall(EXECCNTS_64, &ret);
+    long res = syscall(EXECCNTS_64, &ret);
     
-    printf("%u %u %u %u\n", ret[0], ret[1], ret[2], ret[3]);
+    printf("System call returned: %d\n", res);
+    printf("%d %d %d %d\n", ret[0], ret[1], ret[2], ret[3]);
+    return 0;
 }
