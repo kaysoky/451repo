@@ -70,6 +70,7 @@
 #include <linux/khugepaged.h>
 #include <linux/signalfd.h>
 #include <linux/uprobes.h>
+#include <linux/execcnts.h>
 
 #include <asm/pgtable.h>
 #include <asm/pgalloc.h>
@@ -1637,6 +1638,8 @@ pid_t kernel_thread(int (*fn)(void *), void *arg, unsigned long flags)
 SYSCALL_DEFINE0(fork)
 {
 #ifdef CONFIG_MMU
+    increment_execcnts(current, EXECCNTS_FORK_INDEX);
+    
 	return do_fork(SIGCHLD, 0, 0, NULL, NULL);
 #else
 	/* can not support in nommu mode */
@@ -1648,6 +1651,8 @@ SYSCALL_DEFINE0(fork)
 #ifdef __ARCH_WANT_SYS_VFORK
 SYSCALL_DEFINE0(vfork)
 {
+    increment_execcnts(current, EXECCNTS_VFORK_INDEX);
+    
 	return do_fork(CLONE_VFORK | CLONE_VM | SIGCHLD, 0, 
 			0, NULL, NULL);
 }
@@ -1671,6 +1676,8 @@ SYSCALL_DEFINE5(clone, unsigned long, clone_flags, unsigned long, newsp,
 		 int, tls_val)
 #endif
 {
+    increment_execcnts(current, EXECCNTS_CLONE_INDEX);
+    
 	long ret = do_fork(clone_flags, newsp, 0, parent_tidptr, child_tidptr);
 	asmlinkage_protect(5, ret, clone_flags, newsp,
 			parent_tidptr, child_tidptr, tls_val);

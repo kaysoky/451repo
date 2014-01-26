@@ -3,6 +3,29 @@
 #include <linux/types.h>
 #include <linux/syscalls.h>
 
+#define EXECCNTS_FORK_INDEX 0
+#define EXECCNTS_VFORK_INDEX 1
+#define EXECCNTS_EXECVE_INDEX 2
+#define EXECCNTS_CLONE_INDEX 3
+
+// Recurses up a process tree 
+// and increments the appropriate execcnts of each process by one
+void increment_execcnts(struct task_struct *tsk, int execcnt_type) {
+    if (execcnt_type < EXECCNTS_FORK_INDEX 
+            || execcnt_type > EXECCNTS_CLONE_INDEX) {
+        // Improper usage of this helper method
+        return;
+    }
+    
+    // Increment the counter
+    tsk->execcnts[execcnt_type]++;
+    
+    // Increment the parent's counter
+    if (tsk->real_parent != NULL) {
+        increment_execcnts(tsk->real_parent, execcnt_type);
+    }
+}
+
 SYSCALL_DEFINE2(execcnts, pid_t, pid, int __user *, execcnts) {
   // Grab a read lock on the process list
   // Since this call does not modify the list, we don't need a write lock
