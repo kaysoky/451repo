@@ -1,5 +1,5 @@
+#include <stdio.h>
 #include <unistd.h>
-#include <linux/sched.h>
 
 #define EXECCNTS_64 314
 #define EXECCNTS_32 351

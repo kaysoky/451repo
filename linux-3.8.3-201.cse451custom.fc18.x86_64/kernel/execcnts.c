@@ -1,6 +1,5 @@
 #include <linux/kernel.h>
 #include <linux/sched.h>
-#include <linux/pid.h>
 #include <linux/types.h>
 #include <linux/syscalls.h>
 
@@ -10,7 +9,8 @@ SYSCALL_DEFINE2(execcnts, pid_t, pid, int __user *, execcnts) {
   read_lock(&tasklist_lock);
   
   // Find the Process Control Block
-  struct task_struct *p = find_vpid(pid);
+  struct task_struct *p = find_task_by_vpid(pid);
+  read_unlock(&tasklist_lock);
   
   // Process not found
   if (p == NULL) {
