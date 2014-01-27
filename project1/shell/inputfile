@@ -1,0 +1,5 @@
+ls
+cat fsh.c
+cd ..
+ls
+date
