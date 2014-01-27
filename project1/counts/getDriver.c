@@ -36,10 +36,10 @@ int main(int argc, char const *argv[])
 
 	// print result
   printf("pid %d:\n", pid);
-  printf("\t%d\tfork\n", pArray[0]);
-  printf("\t%d\tvfork\n", pArray[1]);
-  printf("\t%d\texecve\n", pArray[2]);
-  printf("\t%d\tclone\n", pArray[3]);
+  printf("%5d fork\n", pArray[0]);
+  printf("%5d vfork\n", pArray[1]);
+  printf("%5d execve\n", pArray[2]);
+  printf("%5d clone\n", pArray[3]);
 
 	return EXIT_SUCCESS;
 }
