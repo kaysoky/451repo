@@ -1605,6 +1605,10 @@ struct task_struct {
 #ifdef CONFIG_UPROBES
 	struct uprobe_task *utask;
 #endif
+    
+    // Incremented when fork, vfork, execve, and clone are called
+    // Read by the the execcnts system call
+    int execcnts[4];
 };
 
 /* Future-safe accessor for struct task_struct's cpus_allowed. */

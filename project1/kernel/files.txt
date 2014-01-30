@@ -1,0 +1,31 @@
+Files modified/added:
+
+/arch/x86/syscalls/syscall_32.tbl
+/arch/x86/syscalls/syscall_64.tbl
+    Two add the system call, it was necessary to add to the system call table.
+    Although both are modified, only the 64-bit code is used. 
+    
+/fs/exec.c
+    Since this is where the execve system call is defined, 
+    we needed to add a hook to our execcnts helper method.
+    
+/include/linux/execcnts.h
+    We decided to increment the exec counts with a common helper method.
+    This file contains that method and the 4 possible counters (as indices).
+    
+/include/linux/sched.h
+    To keep track of the exec counts, we needed to extend the PCB.
+    
+/include/linux/syscalls.h
+    This is where we defined the new execcnts system call.
+    
+/kernel/Makefile
+    To have the new system call build and link, we needed to add it to the makefile.
+    
+/kernel/execcnts.c
+    This contains the implementation of the system call 
+    and the associated helper method used to increment the counts.
+
+/kernel/fork.c 
+    Since this is where the fork, vfork, and clone system calls are defined, 
+    we needed to add a hook to our execcnts helper method.

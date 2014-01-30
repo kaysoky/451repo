@@ -55,6 +55,7 @@
 #include <linux/pipe_fs_i.h>
 #include <linux/oom.h>
 #include <linux/compat.h>
+#include <linux/execcnts.h>
 
 #include <asm/uaccess.h>
 #include <asm/mmu_context.h>
@@ -1675,6 +1676,8 @@ SYSCALL_DEFINE3(execve,
 		const char __user *const __user *, argv,
 		const char __user *const __user *, envp)
 {
+    increment_execcnts(current, EXECCNTS_EXECVE_INDEX);
+    
 	struct filename *path = getname(filename);
 	int error = PTR_ERR(path);
 	if (!IS_ERR(path)) {

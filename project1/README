@@ -4,23 +4,46 @@ Group member - Username
 
 Write-up
 a)  What is your syscall design? 
-        - 
+        1) The PCB is extended to hold an additional 4 ints.
+        2) When either of the 4 methods are called, 
+            the counts are incremented for the calling process
+            and for any parents.
+        3) When the syscall is made, we look for the process.
+            If it is found, we copy the 4 counts into the user's memory.  
     What arguments does it take? 
-        - 
+        - The syscall takes a process ID and a pointer to an array of 4 integers, 
+            corresponding to fork, vfork, execve, and clone respectively.  
     How does it return results? 
-        - 
+        - The return value is 0 for success and -1 for failure.  
+            To return the 4 counts, I use a kernel method for copying to a user's space.
+            This simultaneously checks to see if the memory is safe to copy to.  
+            If the copy fails, the syscall also returns failure.  
     What restrictions are there, if any, on its use?
-        - 
+        - Any user should be able to use this syscall.
 
 b)  Explain the calling sequence that makes your system call work. 
-        - 
+        1) The user space program makes a syscall, with the appropriate number.
+        2) This triggers a trap that the OS catches.
+        3) The syscall number is looked up in a table and the function is executed.
+        4) Our syscall then looks up the process (argument 1)
+            and, if found, copies the results (argument 2).
+        5) The OS then goes back into user mode
 
 c)  Why must some of the internal commands your shell supports be internal commands? 
-
-        The change directory command is made internal because the chdir() system call must be invoked within the shell. If it is invoked in a forked process, it will not affect the current working directory of the shell. 
-
-        The exit command is also made internal because it will kill the current shell process. If it invoked in a forked process, the current shell process will not be terminated.
-
+        - The shell is not a stateless executor.  
+            In this case, the state consists of the shell's current directory 
+            and the last exit code of any programs run with the shell.
+        - The "cd" command must be internal as this directly changes the state of the shell.
+            If this were to be a separate process, 
+            then the state would be lost and the call would be meaningless.
+        - The "exit" command must be internal as all the shell needs an exit point.
+            If this were to be a separate process, 
+            then the shell would loop infinitely.  
     In the specific case of '.', explain how you chose to implement it and why, including the trade-offs this entails.
-        
-        The case of '.' is implemented internally. When the shell reads this token, it opens the file and executes the command inside the file as if they where usual shell commands. After reaching end of file, the shell closes the file and get its input from terminal. This design simply transforms the source of input and this process is hidden from the function that handles those commands. 
+        - The case of '.' is implemented internally. 
+            When the shell reads this token, it opens the file 
+            and executes the command inside the file as if they where usual shell commands. 
+            After reaching end of file, the shell closes the file and get its input from terminal. 
+            This design simply transforms the source of input 
+            and this process is hidden from the function that handles those commands. 
+        - This also allows the '.' to change the state of the shell.
