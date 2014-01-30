@@ -1,5 +1,5 @@
 ls
-cat fsh.c
+cat inputfile
 cd ..
 ls
 date
