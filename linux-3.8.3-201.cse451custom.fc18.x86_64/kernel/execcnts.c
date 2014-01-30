@@ -4,8 +4,6 @@
 #include <linux/syscalls.h>
 #include <linux/execcnts.h>
 
-// Recurses up a process tree 
-// and increments the appropriate execcnts of each process by one
 void increment_execcnts(struct task_struct *tsk, int execcnt_type) {
     if (execcnt_type < EXECCNTS_FORK_INDEX 
             || execcnt_type > EXECCNTS_CLONE_INDEX) {
@@ -22,14 +20,17 @@ void increment_execcnts(struct task_struct *tsk, int execcnt_type) {
     }
 }
 
-SYSCALL_DEFINE2(execcnts, pid_t, pid, int __user *, execcnts) {
-  // Grab a read lock on the process list
-  // Since this call does not modify the list, we don't need a write lock
-  read_lock(&tasklist_lock);
-  
+void reset_execcnts(struct task_struct *tsk) {
+    tsk->execcnts[EXECCNTS_FORK_INDEX] = 0;
+    tsk->execcnts[EXECCNTS_VFORK_INDEX] = 0;
+    tsk->execcnts[EXECCNTS_EXECVE_INDEX] = 0;
+    tsk->execcnts[EXECCNTS_CLONE_INDEX] = 0;
+}
+
+// Helper for the execcnts system call
+long do_execcnts(pid_t pid, int __user *execcnts) {
   // Find the Process Control Block
   struct task_struct *p = find_task_by_vpid(pid);
-  read_unlock(&tasklist_lock);
   
   // Process not found
   if (p == NULL) {
@@ -42,4 +43,17 @@ SYSCALL_DEFINE2(execcnts, pid_t, pid, int __user *, execcnts) {
   }
   
   return 0;
+}
+
+SYSCALL_DEFINE2(execcnts, pid_t, pid, int __user *, execcnts) {
+  long ret;
+  
+  // Wrap the logic of the system call with a read lock on the task list
+  // Since this call does not modify the list, we don't need a write lock
+  // But we do not want to operate on a changing task list
+  read_lock(&tasklist_lock);
+  ret = do_execcnts(pid, execcnts);
+  read_unlock(&tasklist_lock);
+  
+  return ret;
 }

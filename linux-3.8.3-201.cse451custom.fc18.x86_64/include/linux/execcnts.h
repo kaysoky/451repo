@@ -8,6 +8,16 @@
 #define EXECCNTS_EXECVE_INDEX 2
 #define EXECCNTS_CLONE_INDEX 3
 
+/* 
+ * Recurses up a process tree 
+ * and increments the appropriate exec counts of each process by one
+ */ 
 void increment_execcnts(struct task_struct *tsk, int execcnt_type);
+
+/*
+ * Resets the exec counts of the given process to 0
+ * This should be used on the child process after forking or cloning 
+ */
+void reset_execcnts(struct task_struct *tsk);
 
 #endif
