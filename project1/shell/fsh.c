@@ -23,6 +23,9 @@ const char* BUILT_IN_COMMAND_EXIT = "exit";
 // Used to recognize the built-in command to change the working directory
 const char* BUILT_IN_COMMAND_CD = "cd";
 
+// Used to read input file
+const char* BUILT_IN_COMMAND_PERIOD = ".";
+
 // The name of the environmental variable that is looked up
 // When the "cd" command is used without arguments
 const char* DEFAULT_CD_ENVIRO_VAR = "HOME";
@@ -164,6 +167,8 @@ int main() {
             line = (char *) malloc(INPUT_LENGTH * sizeof(char));
             // Reset file pointer if needed
             if (fgets(line, INPUT_LENGTH, fp) == NULL) {
+                // Close file and free input line
+                fclose(fp);
                 fp = NULL;
                 free(line);
                 continue;
@@ -186,7 +191,7 @@ int main() {
         }
 
         // Read from file
-        if (*tokens[0] == '.' && strlen(tokens[0]) == 1) {
+        if (strcmp(tokens[0], BUILT_IN_COMMAND_PERIOD) == 0) {
 
             fp = fopen(tokens[1],"r");
             // Check if opened

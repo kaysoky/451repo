@@ -27,6 +27,8 @@ int main(int argc, char const *argv[])
 	int pid = atoi(argv[1]);
 
 	// Check pid
+	// For kill(), given option 0, it checks if 
+	// the pid valid and does not kill the process
 	if (!kill(pid, 0))
 		print_invalid_pid();
 
