@@ -1,6 +1,6 @@
 Group member - Username
     Joseph Wu - kaysoky
-    Tianchi Liu - ???
+    Tianchi Liu - tianchi-seattle
 
 Write-up
 a)  What is your syscall design? 
@@ -40,4 +40,10 @@ c)  Why must some of the internal commands your shell supports be internal comma
             If this were to be a separate process, 
             then the shell would loop infinitely.  
     In the specific case of '.', explain how you chose to implement it and why, including the trade-offs this entails.
-        - 
+        - The case of '.' is implemented internally. 
+            When the shell reads this token, it opens the file 
+            and executes the command inside the file as if they where usual shell commands. 
+            After reaching end of file, the shell closes the file and get its input from terminal. 
+            This design simply transforms the source of input 
+            and this process is hidden from the function that handles those commands. 
+        - This also allows the '.' to change the state of the shell.

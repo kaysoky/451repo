@@ -1,0 +1,28 @@
+Script started on Thu 30 Jan 2014 10:48:38 AM PST
+]0;tliu24@javier:~/workspace451/project1/shell]7;file://javier.cs.washington.edu/homes/iws/tliu24/workspace451/project1/shell[?1034h[tliu24@javier shell]$ ./sh[K[Kfsh 
+[?1034hCSE451Shell% date
+Thu Jan 30 10:48:49 PST 2014
+CSE451Shell% /bin/cat /etc/motd /etc/shells
+/bin/sh
+/bin/bash
+/bin/tcsh
+/bin/csh
+CSE451Shell% ./date
+./date: No such file or directory
+CSE451Shell% cd ..
+CSE451Shell% ls
+counts	README	sample_output.txt  shell
+CSE451Shell% cd shell/
+CSE451Shell% . inputfile 
+fsh  fsh.c  fsh.o  inputfile  Makefile	queue.c  queue.h  queue.o  typescript
+ls
+cat inputfile
+cd ..
+ls
+datecounts	README	sample_output.txt  shell
+Thu Jan 30 10:49:09 PST 2014
+CSE451Shell% exit
+]0;tliu24@javier:~/workspace451/project1/shell]7;file://javier.cs.washington.edu/homes/iws/tliu24/workspace451/project1/shell[tliu24@javier shell]$ exit
+exit
+
+Script done on Thu 30 Jan 2014 10:49:13 AM PST

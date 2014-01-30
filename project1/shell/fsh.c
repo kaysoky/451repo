@@ -9,17 +9,22 @@
 #include <errno.h>
 #include "queue.h"
 
+#define INPUT_LENGTH 80
+
 // Used to prompt the user for input
 const char* SHELL_PROMPT = "CSE451Shell% ";
 
 // Used to split input strings into tokens
-const char* STRING_TOKEN_DELIMITERS = " \t";
+const char* STRING_TOKEN_DELIMITERS = " \t\n";
 
 // Used to recognize the built-in command to exit the shell
 const char* BUILT_IN_COMMAND_EXIT = "exit";
 
 // Used to recognize the built-in command to change the working directory
 const char* BUILT_IN_COMMAND_CD = "cd";
+
+// Used to read input file
+const char* BUILT_IN_COMMAND_PERIOD = ".";
 
 // The name of the environmental variable that is looked up
 // When the "cd" command is used without arguments
@@ -28,6 +33,9 @@ const char* DEFAULT_CD_ENVIRO_VAR = "HOME";
 // This is either the default exit code (0)
 // or the exit code of the last executed program
 int exit_code = 0;
+
+// Pointer to file 
+FILE *fp = NULL;
 
 // Tokenizes the given line into an array of C-strings ("returned_tokens")
 // The returned array will have a NULL entry at the end
@@ -150,16 +158,46 @@ static void execute_program(const int num_tokens, const char **tokens) {
 }
 
 int main() {
-    while (1) {
-        // Get a line of input
-        // Note: this must be freed before exiting/looping
-        char *line = readline(SHELL_PROMPT);
+    while (1) { 
+        // Input line  
+        char *line;
+
+        // Read from file
+        if (fp != NULL) {
+            line = (char *) malloc(INPUT_LENGTH * sizeof(char));
+            // Reset file pointer if needed
+            if (fgets(line, INPUT_LENGTH, fp) == NULL) {
+                // Close file and free input line
+                fclose(fp);
+                fp = NULL;
+                free(line);
+                continue;
+            } 
+        } else {
+            // Get a line of input
+            // Note: this must be freed before exiting/looping
+            line = readline(SHELL_PROMPT);
+        }
+
         char **tokens;
         int num_tokens = tokenize(line, &tokens);
 
         // Is there any input?
         if (num_tokens == 0) {
             // Then clean up and loop
+            free(tokens);
+            free(line);
+            continue;
+        }
+
+        // Read from file
+        if (strcmp(tokens[0], BUILT_IN_COMMAND_PERIOD) == 0) {
+
+            fp = fopen(tokens[1],"r");
+            // Check if opened
+            if (fp == NULL)
+                printf("Error while opening file.\n");
+
             free(tokens);
             free(line);
             continue;
@@ -219,5 +257,7 @@ int main() {
         // Clean up before looping
         free(tokens);
         free(line);
+
     }
+
 }
