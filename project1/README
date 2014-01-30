@@ -1,6 +1,6 @@
 Group member - Username
     Joseph Wu - kaysoky
-    Tianchi Liu - ???
+    Tianchi Liu - tianchi-seattle
 
 Write-up
 a)  What is your syscall design? 
@@ -16,6 +16,11 @@ b)  Explain the calling sequence that makes your system call work.
         - 
 
 c)  Why must some of the internal commands your shell supports be internal commands? 
-        - 
+
+        The change directory command is made internal because the chdir() system call must be invoked within the shell. If it is invoked in a forked process, it will not affect the current working directory of the shell. 
+
+        The exit command is also made internal because it will kill the current shell process. If it invoked in a forked process, the current shell process will not be terminated.
+
     In the specific case of '.', explain how you chose to implement it and why, including the trade-offs this entails.
-        - 
+        
+        The case of '.' is implemented internally. When the shell reads this token, it opens the file and executes the command inside the file as if they where usual shell commands. After reaching end of file, the shell closes the file and get its input from terminal. This design simply transforms the source of input and this process is hidden from the function that handles those commands. 
