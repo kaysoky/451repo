@@ -4,8 +4,19 @@ PROGRAMS=execcnts
 
 default: all
 
-all: 
-	$(CC) $(CFLAGS) $(PROGRAM).c ../counts/getcounts.a -o execcnts
+all: execcnts test
+
+execcnts:
+	$(CC) $(CFLAGS) $(PROGRAMS).c ../counts/getcounts.a -o execcnts
+
+test: fork.o vfork.o clone.o execve.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+%.o: %.c %.d
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+%.d: %.c
+	$(CC) $(CXXFLAGS) -MM -MT '$(patsubst %.c,%.o,$<)' $< -MF $@
 
 clean:
 	rm -f $(OBJS) $(PROGRAMS)
