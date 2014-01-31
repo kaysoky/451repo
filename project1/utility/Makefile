@@ -2,14 +2,26 @@ CC=gcc
 CFLAGS=-std=gnu99 -g -Wall -O0
 PROGRAMS=execcnts
 
-default: all
+default: execcnts
 
 all: execcnts test
 
 execcnts:
 	$(CC) $(CFLAGS) $(PROGRAMS).c ../counts/getcounts.a -o execcnts
+    
+test: fork vfork clone execve
+	$(CC) $(CFLAGS) $^ -o $@
 
-test: fork.o vfork.o clone.o execve.o
+fork: fork.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+vfork: vfork.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+clone: clone.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+execve: execve.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 %.o: %.c %.d

@@ -50,11 +50,11 @@ static int tokenize(char *line, char ***returned_tokens) {
     // Split the line of input into tokens
     // Note: no memory is allocated by strtok()
     char *token = strtok(line, STRING_TOKEN_DELIMITERS);
-    queue_append(token_queue, (queue_element*) token);
 
     // Continue to tokenize until there are no more tokens
-    while ((token = strtok(NULL, STRING_TOKEN_DELIMITERS))) {
+    while (token) {
         queue_append(token_queue, (queue_element*) token);
+        token = strtok(NULL, STRING_TOKEN_DELIMITERS);
     }
 
     // Initialize the return values
