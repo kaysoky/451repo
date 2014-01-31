@@ -1,12 +1,9 @@
 #include "getexeccounts.h"
 
-#define NUM_ELEMENT 4
+#define EXECCNTS_64 314
 
-int getExecCounts(int pid, int* pArray)
-{
-	int i;
-	for (i = 0; i < NUM_ELEMENT; ++i)
-		pArray[i] = i;
-
-	return 0;
+int getExecCounts(int pid, int* pArray) {
+	int res;
+    res = syscall(EXECCNTS_64, pid, pArray);
+	return res;
 }

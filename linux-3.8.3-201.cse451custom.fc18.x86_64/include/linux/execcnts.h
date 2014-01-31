@@ -9,8 +9,8 @@
 #define EXECCNTS_CLONE_INDEX 3
 
 /* 
- * Recurses up a process tree 
- * and increments the appropriate exec counts of each process by one
+ * Increments the appropriate exec counts 
+ * of the specified process and its parent by one
  */ 
 void increment_execcnts(struct task_struct *tsk, int execcnt_type);
 

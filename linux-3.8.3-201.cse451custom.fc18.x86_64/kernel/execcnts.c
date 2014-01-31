@@ -15,8 +15,8 @@ void increment_execcnts(struct task_struct *tsk, int execcnt_type) {
     tsk->execcnts[execcnt_type]++;
     
     // Increment the parent's counter
-    if (tsk->real_parent != NULL) {
-        increment_execcnts(tsk->real_parent, execcnt_type);
+    if (tsk->parent != NULL) {
+        tsk->parent->execcnts[execcnt_type]++;
     }
 }
 
