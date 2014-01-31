@@ -10,7 +10,6 @@ execcnts:
 	$(CC) $(CFLAGS) $(PROGRAMS).c ../counts/getcounts.a -o execcnts
     
 test: fork vfork clone execve
-	$(CC) $(CFLAGS) $^ -o $@
 
 fork: fork.o
 	$(CC) $(CFLAGS) $^ -o $@
