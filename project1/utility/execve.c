@@ -1,9 +1,9 @@
 #include <unistd.h>
 
-int main(int argc, char *argv[]) {
-    char *argv[2];
-    argv[0] = "fork";
-    argv[1] = "\0";
-    syscall(59, 1, argv);
+int main() {
+    char *test[2];
+    test[0] = "fork";
+    test[1] = "\0";
+    syscall(59, 1, test);
     return 0;
 }
