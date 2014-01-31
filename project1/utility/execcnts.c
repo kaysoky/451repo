@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 
     // Get count for child pid
     int counts[4];
-    int res = getExecCounts(pid, counts);
+    int res = getExecCounts(getpid(), counts);
 
     // Check for failure
     if (res != 0) {
