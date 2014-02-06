@@ -34,7 +34,7 @@ const char* DEFAULT_CD_ENVIRO_VAR = "HOME";
 // or the exit code of the last executed program
 int exit_code = 0;
 
-// Pointer to file 
+// Pointer to the file being read from due to the "." command
 FILE *fp = NULL;
 
 // Tokenizes the given line into an array of C-strings ("returned_tokens")
@@ -50,11 +50,11 @@ static int tokenize(char *line, char ***returned_tokens) {
     // Split the line of input into tokens
     // Note: no memory is allocated by strtok()
     char *token = strtok(line, STRING_TOKEN_DELIMITERS);
-    queue_append(token_queue, (queue_element*) token);
 
     // Continue to tokenize until there are no more tokens
-    while ((token = strtok(NULL, STRING_TOKEN_DELIMITERS))) {
+    while (token) {
         queue_append(token_queue, (queue_element*) token);
+        token = strtok(NULL, STRING_TOKEN_DELIMITERS);
     }
 
     // Initialize the return values
@@ -157,6 +157,76 @@ static void execute_program(const int num_tokens, const char **tokens) {
     }
 }
 
+// Takes a tokenized input line and runs the associated command
+static void do_main(char **tokens, int num_tokens) {
+    // Is there any input?
+    if (num_tokens == 0) {
+        // Nothing to do in this case
+        return;
+    }
+
+    // Read from file
+    if (strcmp(tokens[0], BUILT_IN_COMMAND_PERIOD) == 0) {
+        
+        if (fp != NULL) {
+            printf("Recursive execution from a file is not supported");
+            return;
+        }
+        
+        fp = fopen(tokens[1], "r");
+        
+        // Check if the file opened successfully
+        if (fp == NULL) {
+            perror("fopen");
+        }
+
+    // Interpret the input line by looking at the first token
+    } else if (strcmp(tokens[0], BUILT_IN_COMMAND_EXIT) == 0) {
+        // Is there an additional argument?
+        if (num_tokens > 1) {
+            // Try to parse the second argument into a number
+            // Ignore the other arguments
+            // Heavily based on: http://linux.die.net/man/3/strtol
+            char *endptr;
+            long val;
+
+            // To distinguish success/failure after the call
+            errno = 0;
+            val = strtol(tokens[1], &endptr, 10);
+
+            // Is there integer overflow?
+            // Or did some other unexpected error occur?
+            if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+                    || (errno != 0 && val == 0)) {
+                perror("strtol");
+                val = exit_code;
+            }
+
+            // Was a number given at all?
+            if (endptr == tokens[1]) {
+                val = exit_code;
+            }
+
+            // Successfully parsed a number
+            // Or set the value to be the default exit code
+            exit_code = val;
+        }
+
+        // Exit with the appropriate code
+        exit(exit_code);
+
+    // Check for the "cd" command
+    } else if (strcmp(tokens[0], BUILT_IN_COMMAND_CD) == 0) {
+        change_directory(num_tokens, (const char **) tokens);
+
+        return;
+
+    // Treat the first argument as a path to an executable
+    } else {
+        execute_program(num_tokens, (const char **) tokens);
+    }
+}
+
 int main() {
     while (1) { 
         // Input line  
@@ -165,11 +235,14 @@ int main() {
         // Read from file
         if (fp != NULL) {
             line = (char *) malloc(INPUT_LENGTH * sizeof(char));
+            
             // Reset file pointer if needed
             if (fgets(line, INPUT_LENGTH, fp) == NULL) {
-                // Close file and free input line
+                // Close the file
                 fclose(fp);
                 fp = NULL;
+                
+                // No line was read, so ask the user for input
                 free(line);
                 continue;
             } 
@@ -179,85 +252,13 @@ int main() {
             line = readline(SHELL_PROMPT);
         }
 
+        // Tokenize and execute
         char **tokens;
         int num_tokens = tokenize(line, &tokens);
-
-        // Is there any input?
-        if (num_tokens == 0) {
-            // Then clean up and loop
-            free(tokens);
-            free(line);
-            continue;
-        }
-
-        // Read from file
-        if (strcmp(tokens[0], BUILT_IN_COMMAND_PERIOD) == 0) {
-
-            fp = fopen(tokens[1],"r");
-            // Check if opened
-            if (fp == NULL)
-                printf("Error while opening file.\n");
-
-            free(tokens);
-            free(line);
-            continue;
-        }
-
-        // Interpret the input line by looking at the first token
-        if (strcmp(tokens[0], BUILT_IN_COMMAND_EXIT) == 0) {
-            // Is there an additional argument?
-            if (num_tokens > 1) {
-                // Try to parse the second argument into a number
-                // Ignore the other arguments
-                // Heavily based on: http://linux.die.net/man/3/strtol
-                char *endptr;
-                long val;
-
-                // To distinguish success/failure after the call
-                errno = 0;
-                val = strtol(tokens[1], &endptr, 10);
-
-                // Is there integer overflow?
-                // Or did some other unexpected error occur?
-                if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
-                        || (errno != 0 && val == 0)) {
-                    perror("strtol");
-                    val = exit_code;
-                }
-
-                // Was a number given at all?
-                if (endptr == tokens[1]) {
-                    val = exit_code;
-                }
-
-                // Successfully parsed a number
-                // Or set the value to be the default exit code
-                exit_code = val;
-            }
-
-            // Exit with the appropriate code
-            free(tokens);
-            free(line);
-            exit(exit_code);
-        }
-
-        // Check for the "cd" command
-        if (strcmp(tokens[0], BUILT_IN_COMMAND_CD) == 0) {
-            change_directory(num_tokens, (const char **) tokens);
-
-            // Clean up before looping
-            free(tokens);
-            free(line);
-            continue;
-        }
-
-        // Treat the first argument as a path to an executable
-        execute_program(num_tokens, (const char **) tokens);
+        do_main(tokens, num_tokens);
 
         // Clean up before looping
         free(tokens);
         free(line);
-
     }
-
 }

@@ -1,17 +1,26 @@
-SUFFIXES+=.d
-NODEPS=clean
 CC=gcc
 CFLAGS=-std=gnu99 -g -Wall -O0
-SRCS=$(shell find . -maxdepth 1 -name "*.c")
-DEPFILES=$(patsubst %.c, %.d, $(SRCS))
-OBJS=testexeccnts.o
-PROGRAMS=testexeccnts
+PROGRAMS=execcnts
 
-default: all
+default: execcnts
 
-all: testexeccnts
+all: execcnts test
 
-testexeccnts: testexeccnts.o
+execcnts:
+	$(CC) $(CFLAGS) $(PROGRAMS).c ../counts/getcounts.a -o execcnts
+    
+test: fork vfork clone execve
+
+fork: fork.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+vfork: vfork.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+clone: clone.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+execve: execve.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 %.o: %.c %.d
@@ -21,9 +30,4 @@ testexeccnts: testexeccnts.o
 	$(CC) $(CXXFLAGS) -MM -MT '$(patsubst %.c,%.o,$<)' $< -MF $@
 
 clean:
-	rm -f $(OBJS) $(PROGRAMS) $(DEPFILES)
-
-# Don't generate dependencies for all rules
-ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NODEPS))))
-	-include $(DEPFILES)
-endif
+	rm -f $(OBJS) $(PROGRAMS)
