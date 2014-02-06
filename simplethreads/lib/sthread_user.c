@@ -1,5 +1,5 @@
 /* Simplethreads Instructional Thread Package
- * 
+ *
  * sthread_user.c - Implements the sthread API using user-level threads.
  *
  *    You need to implement the routines in this file.
@@ -22,7 +22,11 @@
 
 struct _sthread {
   sthread_ctx_t *saved_ctx;
-  /* Add your fields to the thread data structure here */
+  sthread_start_func_t start_routine;
+  void *start_arg;
+  
+  // TODO: We probably need to have a separate void* here
+  int joinable;
 };
 
 
@@ -36,7 +40,34 @@ void sthread_user_init(void) {
 
 sthread_t sthread_user_create(sthread_start_func_t start_routine, void *arg,
                               int joinable) {
-  return NULL;
+  // Allocate memory for the new thread
+  struct _sthread *thread = (struct _sthread *)
+                            malloc(sizeof(struct _sthread));
+
+  // Did the malloc succeed?
+  if (thread == NULL) {
+    fprintf(stderr, "Out of memory (sthread_user_create)\n");
+    return NULL;
+  }
+  
+  // Initialize the context
+  thread->saved_ctx = sthread_new_ctx(sthread_user_init);
+  
+  // Did the initialization succeed?
+  if (thread->saved_ctx == NULL) {
+    // sthread_new_ctx prints the problem to stderr
+    free(thread);
+    return NULL;
+  }
+  
+  // Save the passed-in state
+  thread->start_routine = start_routine;
+  thread->start_arg = arg;
+  
+  // TODO: Not sure if this is correct
+  thread->joinable = joinable;
+  
+  return thread;
 }
 
 void sthread_user_exit(void *ret) {
