@@ -1,7 +1,7 @@
-bin_PROGRAMS = test-create test-join test-mutex test-cond test-preempt
+bin_PROGRAMS = test-create test-exit test-join test-mutex test-cond test-preempt
 
 # these are run by 'make check'
-TESTS = test-create test-join test-mutex test-cond test-preempt
+TESTS = test-create test-exit test-join test-mutex test-cond test-preempt
 
 ldadd = ../lib/libsthread.la
 AM_LDFLAGS = ../lib/sthread_start.o
@@ -9,6 +9,8 @@ LDADD = $(ldadd)
 INCLUDES = -I ../include
 
 test_create_SOURCES = test-create.c
+
+test_exit_SOURCES = test-exit.c
 
 test_join_SOURCES = test-join.c
 

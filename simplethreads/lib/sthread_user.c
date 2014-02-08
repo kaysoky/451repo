@@ -79,11 +79,10 @@ static void sthread_detach(struct _sthread *thread);
 
 /*
  * Helper for ctx_start_function() and sthread_user_exit()
- * Treats the 'current_thread' as a detached thread (see: sthread_detach())
- *   and switches to another ready thread
+ * Switches from the given context to another ready thread
  * If no such thread is available, this instead calls exit()
  */
-static void sthread_switch_from_detached();
+static void sthread_switch_from(sthread_ctx_t *ctx);
 
 /*
  * Helper for sthread_user_create()
@@ -129,13 +128,18 @@ void sthread_user_exit(void *ret) {
   sthread_detach(current_thread);
   
   // Switch to another thread
-  sthread_switch_from_detached();
+  sthread_switch_from(detached_context);
 
   // Not reachable
   assert(0);
 }
 
 void* sthread_user_join(sthread_t thread) {
+  // Yield until the other thread completes
+  while (!thread->done) {
+    sthread_user_yield();
+  }
+  
   // Save the return value
   void *ret_val = thread->ret_val;
   
@@ -179,7 +183,7 @@ static struct _sthread *sthread_user_create_empty() {
                             malloc(sizeof(struct _sthread));
 
   // Did the malloc succeed?
-  if (current_thread == NULL) {
+  if (thread == NULL) {
     fprintf(stderr, "Out of memory (sthread_user_create_empty)\n");
     return NULL;
   }
@@ -215,7 +219,7 @@ static void sthread_detach(struct _sthread *thread) {
   free(thread);
 }
 
-static void sthread_switch_from_detached() {
+static void sthread_switch_from(sthread_ctx_t *ctx) {
   // If there are no remaining threads, exit the program
   if (sthread_queue_is_empty(ready_queue)) {
     exit(0);
@@ -223,7 +227,7 @@ static void sthread_switch_from_detached() {
 
   // Switch to another ready thread
   current_thread = sthread_dequeue(ready_queue);
-  sthread_switch(detached_context, current_thread->saved_ctx;
+  sthread_switch(ctx, current_thread->saved_ctx);
 
   // Not reachable
   assert(0);
@@ -239,12 +243,16 @@ static void ctx_start_function(void) {
   // Deallocate the current thread if it is not joinable
   // Note: We assume that all joinable threads will have join called on them.
   //       That is where their memory is freed.
-  if (!current_thread->joinable) {
+  sthread_ctx_t *old_ctx;
+  if (current_thread->joinable) {
+    old_ctx = current_thread->saved_ctx;
+  } else {
     sthread_detach(current_thread);
+    old_ctx = detached_context;
   }
   
   // Switch to another thread
-  sthread_switch_from_detached();
+  sthread_switch_from(old_ctx);
 
   // Not reachable
   assert(0);
