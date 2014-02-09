@@ -80,9 +80,10 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = test-create$(EXEEXT) test-exit$(EXEEXT) \
 	test-join$(EXEEXT) test-mutex$(EXEEXT) test-cond$(EXEEXT) \
-	test-preempt$(EXEEXT)
+	test-burgers$(EXEEXT) test-preempt$(EXEEXT)
 TESTS = test-create$(EXEEXT) test-exit$(EXEEXT) test-join$(EXEEXT) \
-	test-mutex$(EXEEXT) test-cond$(EXEEXT) test-preempt$(EXEEXT)
+	test-mutex$(EXEEXT) test-cond$(EXEEXT) test-burgers.sh \
+	test-preempt$(EXEEXT)
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(top_srcdir)/test-driver
@@ -99,14 +100,18 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_test_cond_OBJECTS = test-cond.$(OBJEXT)
-test_cond_OBJECTS = $(am_test_cond_OBJECTS)
-test_cond_LDADD = $(LDADD)
-test_cond_DEPENDENCIES = $(ldadd)
+am_test_burgers_OBJECTS = test-burgers.$(OBJEXT)
+test_burgers_OBJECTS = $(am_test_burgers_OBJECTS)
+test_burgers_LDADD = $(LDADD)
+test_burgers_DEPENDENCIES = $(ldadd)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am_test_cond_OBJECTS = test-cond.$(OBJEXT)
+test_cond_OBJECTS = $(am_test_cond_OBJECTS)
+test_cond_LDADD = $(LDADD)
+test_cond_DEPENDENCIES = $(ldadd)
 am_test_create_OBJECTS = test-create.$(OBJEXT)
 test_create_OBJECTS = $(am_test_create_OBJECTS)
 test_create_LDADD = $(LDADD)
@@ -161,12 +166,14 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(test_cond_SOURCES) $(test_create_SOURCES) \
-	$(test_exit_SOURCES) $(test_join_SOURCES) \
-	$(test_mutex_SOURCES) $(test_preempt_SOURCES)
-DIST_SOURCES = $(test_cond_SOURCES) $(test_create_SOURCES) \
-	$(test_exit_SOURCES) $(test_join_SOURCES) \
-	$(test_mutex_SOURCES) $(test_preempt_SOURCES)
+SOURCES = $(test_burgers_SOURCES) $(test_cond_SOURCES) \
+	$(test_create_SOURCES) $(test_exit_SOURCES) \
+	$(test_join_SOURCES) $(test_mutex_SOURCES) \
+	$(test_preempt_SOURCES)
+DIST_SOURCES = $(test_burgers_SOURCES) $(test_cond_SOURCES) \
+	$(test_create_SOURCES) $(test_exit_SOURCES) \
+	$(test_join_SOURCES) $(test_mutex_SOURCES) \
+	$(test_preempt_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -517,6 +524,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+EXTRA_DIST = test-burgers.sh
 ldadd = ../lib/libsthread.la
 AM_LDFLAGS = ../lib/sthread_start.o
 LDADD = $(ldadd)
@@ -526,6 +534,7 @@ test_exit_SOURCES = test-exit.c
 test_join_SOURCES = test-join.c
 test_mutex_SOURCES = test-mutex.c
 test_cond_SOURCES = test-cond.c
+test_burgers_SOURCES = test-burgers.c
 test_preempt_SOURCES = test-preempt.c
 all: all-am
 
@@ -611,6 +620,10 @@ clean-binPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
+test-burgers$(EXEEXT): $(test_burgers_OBJECTS) $(test_burgers_DEPENDENCIES) $(EXTRA_test_burgers_DEPENDENCIES) 
+	@rm -f test-burgers$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_burgers_OBJECTS) $(test_burgers_LDADD) $(LIBS)
+
 test-cond$(EXEEXT): $(test_cond_OBJECTS) $(test_cond_DEPENDENCIES) $(EXTRA_test_cond_DEPENDENCIES) 
 	@rm -f test-cond$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_cond_OBJECTS) $(test_cond_LDADD) $(LIBS)
@@ -641,6 +654,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-burgers.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-cond.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-create.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test-exit.Po@am__quote@
@@ -899,6 +913,13 @@ test-mutex.log: test-mutex$(EXEEXT)
 test-cond.log: test-cond$(EXEEXT)
 	@p='test-cond$(EXEEXT)'; \
 	b='test-cond'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test-burgers.sh.log: test-burgers.sh
+	@p='test-burgers.sh'; \
+	b='test-burgers.sh'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

@@ -1,0 +1,65 @@
+\documentclass[a4paper, 12pt]{report}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\begin{document}
+    \begin{center}
+        {\LARGE Project Two} \\
+        CSE 451 A \\
+        Joseph Wu \makebox[0pt][l]{{\tiny (kaysoky)}} \\
+        February 7-16, 2014 \\
+        {\tiny Typeset via \LaTeX}
+    \end{center}
+
+Note: My ``\textit{partner}'' Tianchi Liu (tliu24) did not contribute to this assignment.
+
+\section{Design Discussion}
+    Since I could assume that there were no interrupts, 
+        parts of this assignment were greatly simplified 
+        (which may not be the case for the next parts).  
+    For the thread data structure, 
+        I stored the context and initialization arguments in order to execute the thread.
+    I also provided a location for the return value of the thread (if joinable)
+        and a boolean for marking a thread as complete (also for join-ability).
+    These fields seemed like the minimum necessary to complete the thread functionality.
+    
+    The assignment hint about creating a thread object for the current thread was useful.
+    I implemented this by initializing a static ``current\_thread'' object, 
+        which contains a few NULLs that mark it as the primary thread.  
+    
+    In terms of memory management, 
+        the threads are cleaned up whenever they either exit, join, or complete (detached).  
+    Since a thread can't free its own context, 
+        I used a single static pointer to a thread context to store a finished thread's context.
+    Whenever that pointer is overwritten, I first check and free any existing value.  
+    This keeps the memory utilization of dead threads at a constant value.  
+    
+    In terms of scheduling, 
+        I went with a simple deterministic FIFO scheme.  
+    New threads or yielded threads go to the back of the queue.
+    Yielding will transition to the next ready thread if there is one.  
+    
+    For synchronization, the non-preemption assumption simplified things greatly.
+    (In fact, the implementation was so quick, I thought I might have missed something.)
+    For the mutex, it was sufficient to just use a boolean to mark it as locked or unlocked.
+    For the condition, it was sufficient to just keep track of waiting threads.  
+    I tried to catch a few cases of infinite blocking 
+        (i.e. lock when there are no other ready threads),
+        but this only covers a trifling amount of possible threading errors.  
+
+\section{Functionality}
+    As far as I can tell, the simple implementation is functional.  
+    (Except for pre-emption, which is not part of this assignment.)
+    The fact that the programmer must keep calling yield(\ldots{}) is inconvenient, 
+        but it makes the thread module very simple.  
+    
+    I did have to change the file mode of a test file with: \\
+    \texttt{chmod u+x test/test-burgers.sh} \\
+    I'm not sure if the file mode is retained after tarballing.
+        
+\section{Web Benchmark}
+    Not applicable for this stage of the assignment.
+    
+\end{document}
