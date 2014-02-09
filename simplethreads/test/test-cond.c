@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     } else {
       /* broadcast to let the consumers know we've
        * finished, so they can exit
-       * (othrewise, they may still be holding the lock
+       * (otherwise, they may still be holding the lock
        * when we try to free it below) */
       sthread_cond_broadcast(avail_cond);
       checks = -1;

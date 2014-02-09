@@ -74,7 +74,7 @@ sthread_mutex_t sthread_mutex_init();
  * Assume mutex has no waiters. */
 void sthread_mutex_free(sthread_mutex_t lock);
 
-/* Acquire the lock, blocking if neccessary. */
+/* Acquire the lock, blocking if necessary. */
 void sthread_mutex_lock(sthread_mutex_t lock);
 
 /* Release the lock. Assumed that the calling thread owns the lock */
@@ -92,14 +92,14 @@ void sthread_cond_free(sthread_cond_t cond);
 
 /* Signal that the condition has been met, awakening a single waiting
  * thread. (Though not switching to the newly awoken thread
- * immediatly.) */
+ * immediately.) */
 void sthread_cond_signal(sthread_cond_t cond);
 
 /* Signal that the condition has been met, awakening all waiting
  * threads. */
 void sthread_cond_broadcast(sthread_cond_t cond);
 
-/* Block the calling thread until the condition has been signaled.
+/* Block the calling thread until the condition has been signalled.
  * Atomically does the following:
  * 1. Releases lock.
  * 2. Add thread to the waiters for cond.

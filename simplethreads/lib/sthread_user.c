@@ -93,6 +93,16 @@ static void sthread_switch_from(sthread_ctx_t *ctx);
  */
 static void ctx_start_function(void);
 
+/*
+ * Helper for sthread_user_yield() and sthread_user_cond_wait()
+ * Yields the current thread 
+ *   and stores the current thread on the given queue
+ *   For a normal yield, 'wait_queue' == 'ready_queue'
+ * The next ready thread is always taken from the 'ready_queue'
+ * Note: Assumes that the ready_queue is NOT empty
+ */
+static void sthread_yield_onto_queue(sthread_queue_t wait_queue);
+
 void sthread_user_init(void) {
   current_thread = sthread_user_create_empty();
   ready_queue = sthread_new_queue();
@@ -155,20 +165,7 @@ void sthread_user_yield(void) {
     return;
   }
 
-  if (current_thread->saved_ctx == NULL) {
-    current_thread->saved_ctx = sthread_new_blank_ctx();
-  }
-  
-  // Keep a reference to the current context
-  sthread_ctx_t *old_context = current_thread->saved_ctx;
-
-  // Swap the current thread with another ready thread
-  sthread_enqueue(ready_queue, current_thread);
-  current_thread = sthread_dequeue(ready_queue);
-  
-  // Switch contexts
-  // This saves the current context onto the queue
-  sthread_switch(old_context, current_thread->saved_ctx);
+  sthread_yield_onto_queue(ready_queue);
   
   // Note: When the calling thread resumes, it will begin here.
 }
@@ -258,45 +255,131 @@ static void ctx_start_function(void) {
   assert(0);
 }
 
+static void sthread_yield_onto_queue(sthread_queue_t wait_queue) {
+  if (current_thread->saved_ctx == NULL) {
+    current_thread->saved_ctx = sthread_new_blank_ctx();
+  }
+  
+  // Keep a reference to the current context
+  sthread_ctx_t *old_context = current_thread->saved_ctx;
+
+  // Swap the current thread with another ready thread
+  sthread_enqueue(wait_queue, current_thread);
+  current_thread = sthread_dequeue(ready_queue);
+  
+  // Switch contexts
+  // This saves the current context onto the queue
+  sthread_switch(old_context, current_thread->saved_ctx);
+  
+  // Note: When the calling thread resumes, it will begin here.
+}
+
 /*********************************************************************/
 /* Part 2: Synchronization Primitives                                */
 /*********************************************************************/
 
 struct _sthread_mutex {
-  /* Fill in mutex data structure */
+  int locked;
 };
 
 sthread_mutex_t sthread_user_mutex_init() {
-  return NULL;
+  // Allocate memory for the new mutex
+  struct _sthread_mutex *mutex = (struct _sthread_mutex *)
+                                 malloc(sizeof(struct _sthread_mutex));
+
+  // Did the malloc succeed?
+  if (mutex == NULL) {
+    fprintf(stderr, "Out of memory (sthread_user_mutex_init)\n");
+    return NULL;
+  }
+  
+  // Mutex starts unlocked
+  mutex->locked = 0;
+  return mutex;
 }
 
 void sthread_user_mutex_free(sthread_mutex_t lock) {
+  // Assuming no waiters
+  free(lock);
 }
 
 void sthread_user_mutex_lock(sthread_mutex_t lock) {
+  // If blocking, make sure there's something else scheduled
+  if (sthread_queue_is_empty(ready_queue)) {
+    fprintf(stderr, "Infinite blocking detected (sthread_user_mutex_lock)\n");
+    exit(0);
+  }
+  
+  // Block until the lock is free
+  while (lock->locked) {
+    sthread_user_yield();
+  }
+  
+  lock->locked = 1;
 }
 
 void sthread_user_mutex_unlock(sthread_mutex_t lock) {
+  lock->locked = 0;
 }
 
 
 struct _sthread_cond {
-  /* Fill in condition variable structure */
+  sthread_queue_t wait_queue;
 };
 
 sthread_cond_t sthread_user_cond_init(void) {
-  return NULL;
+  // Allocate memory for the new condition
+  struct _sthread_cond *cond = (struct _sthread_cond *)
+                                malloc(sizeof(struct _sthread_cond));
+
+  // Did the malloc succeed?
+  if (cond == NULL) {
+    fprintf(stderr, "Out of memory (sthread_user_cond_init)\n");
+    return NULL;
+  }
+  
+  cond->wait_queue = sthread_new_queue();
+  return cond;
 }
 
 void sthread_user_cond_free(sthread_cond_t cond) {
+  // Assuming no waiters
+  sthread_free_queue(cond->wait_queue);
+  free(cond);
 }
 
 void sthread_user_cond_signal(sthread_cond_t cond) {
+  // No threads to signal
+  if (sthread_queue_is_empty(cond->wait_queue)) {
+    return;
+  }
+  
+  // Move a single thread into the 'ready_queue'
+  sthread_enqueue(ready_queue, sthread_dequeue(cond->wait_queue));
 }
 
 void sthread_user_cond_broadcast(sthread_cond_t cond) {
+  // Move all waiting threads onto the 'ready_queue'
+  while (!sthread_queue_is_empty(cond->wait_queue)) {
+    sthread_enqueue(ready_queue, sthread_dequeue(cond->wait_queue));
+  }
 }
 
 void sthread_user_cond_wait(sthread_cond_t cond,
                             sthread_mutex_t lock) {
+  // If blocking, make sure there's something else scheduled
+  if (sthread_queue_is_empty(ready_queue)) {
+    fprintf(stderr, "Infinite blocking detected (sthread_user_cond_wait)\n");
+    exit(0);
+  }
+  
+  // Unlock the given mutex, assuming the caller holds the lock
+  sthread_user_mutex_unlock(lock);
+  
+  // Have the current thread wait on a separate queue
+  // Signalling/broadcasting the condition 
+  //   will move the thread onto the 'ready_queue'
+  sthread_yield_onto_queue(cond->wait_queue);
+  
+  // Note: When the calling thread is signalled, it will begin here.
 }
