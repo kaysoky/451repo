@@ -1,7 +1,8 @@
-bin_PROGRAMS = test-create test-exit test-join test-mutex test-cond test-preempt
+bin_PROGRAMS = test-create test-exit test-join test-mutex test-cond test-burgers test-preempt
 
 # these are run by 'make check'
-TESTS = test-create test-exit test-join test-mutex test-cond test-preempt
+TESTS = test-create test-exit test-join test-mutex test-cond test-burgers.sh test-preempt
+EXTRA_DIST = test-burgers.sh
 
 ldadd = ../lib/libsthread.la
 AM_LDFLAGS = ../lib/sthread_start.o
@@ -17,6 +18,8 @@ test_join_SOURCES = test-join.c
 test_mutex_SOURCES = test-mutex.c
 
 test_cond_SOURCES = test-cond.c
+
+test_burgers_SOURCES = test-burgers.c
 
 test_preempt_SOURCES = test-preempt.c
 
