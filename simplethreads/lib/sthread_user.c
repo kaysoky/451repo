@@ -382,4 +382,5 @@ void sthread_user_cond_wait(sthread_cond_t cond,
   sthread_yield_onto_queue(cond->wait_queue);
   
   // Note: When the calling thread is signalled, it will begin here.
+  sthread_user_mutex_lock(lock);
 }

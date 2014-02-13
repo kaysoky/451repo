@@ -145,10 +145,9 @@ void *student_thread(void *arg) {
   sthread_mutex_lock(burger_lock);
   
   while (burger_counter < num_burgers || yummy != NULL) {
-    // Wait for a burger (unlocks the mutex)
+    // Wait for a burger
     if (yummy == NULL) {
       sthread_cond_wait(burger_ready, burger_lock);
-      sthread_mutex_lock(burger_lock);
     }
     
     if (yummy != NULL) {
