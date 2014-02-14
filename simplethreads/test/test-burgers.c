@@ -110,6 +110,8 @@ int main(int argc, char **argv) {
   assert(burger_counter == num_burgers);
   assert(yummy == NULL);
 
+  free(cooks);
+  free(students);
   sthread_mutex_free(burger_lock);
   sthread_cond_free(burger_ready);
   return 0;
